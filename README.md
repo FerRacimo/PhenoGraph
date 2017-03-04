@@ -19,4 +19,4 @@ The neutral input file should contain unlinked neutral SNPs that are not signifi
 
 # Graph parameter file
 
-This file contains SimpleGraph.R is an example graph parameter file.
+This file contains information about the admixture graph, which should have been previously inferred using a program like MixMapper (Lipson et al. 2013) or qpGraph (Patterson et al. 2012). SimpleGraph.R is an example graph parameter file. This file uses the R library admixturegraph (Leppälä et al. 2017) to build the graph.
