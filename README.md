@@ -39,18 +39,19 @@ This file contains information about the admixture graph, which should have been
 
 Here is an example command line:
 
-% Rscript RunPhenotype.R \
-% -g GWAS_HEIGHT_1000genomes_allpops.txt \
-% -e Neut_HEIGHT_1000genomes_allpops.txt \
-% -r 1KG_YRI_CEU_CHB_PEL_CLM.R \
-% -o trace_HEIGHT_1KG_YRI_CEU_CHB_PEL_CLM.txt \
-% -q qfile_HEIGHT_1KG_YRI_CEU_CHB_PEL_CLM.txt \
-% -n 1000000 \
-% -x 1000 \
-% -i 0.01 \
-% -s 0.1 \
-% -t 0.02 
-% -u 25
+    % Rscript RunPhenotype.R \
+    % -g GWAS_HEIGHT_1000genomes_allpops.txt \
+    % -e Neut_HEIGHT_1000genomes_allpops.txt \
+    % -r 1KG_YRI_CEU_CHB_PEL_CLM.R \
+    % -o trace_HEIGHT_1KG_YRI_CEU_CHB_PEL_CLM.txt \
+    % -q qfile_HEIGHT_1KG_YRI_CEU_CHB_PEL_CLM.txt \
+    % -n 1000000 \
+    % -x 1000 \
+    % -i 0.01 \
+    % -s 0.1 \
+    % -t 0.02 \
+    % -u 25
+
 
 # Output files
 
