@@ -50,7 +50,7 @@ The command line options for PhenoGraph are as follows. The first 3 options (inp
     -i [Size of proposals for frequencies of inner nodes; default: 0.01] \
     -s [Standard deviation for alpha prior; default: 0.1] \
     -t [Size of proposals for alpha parameters; default: 0.02] \
-    -u [Spike and slab factor; default: 25]
+    -u [In spike-and-slab prior, number by which std dev of wide Normal dist. will be divived to obtain std dev of narrow Normal dist.; default: 25]
     -f [Number by which maximum Q_B score will be divided to obtain Q_B cutoff; default: 3]
 
 
