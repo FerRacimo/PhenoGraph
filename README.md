@@ -37,14 +37,14 @@ This file contains information about the admixture graph, which should have been
 
 # Running PhenoGraph
 
-The command line options for PhenoGraph are as follows. The first five options (file names) are required:
+The command line options for PhenoGraph are as follows. The first 3 options (input file names) are required:
 
     Rscript RunPhenotype.R \
     -g [GWAS input file name; default: NULL] \
     -e [Neutral input file name; default: NULL] \
     -r [Graph R file name; default: NULL] \
-    -o [MCMC trace output file name; default: NULL] \
-    -q [Q_B statistic output file name; default: NULL] \
+    -o [MCMC trace output file name; default: MCMC_trace.txt] \
+    -q [Q_B statistic output file name; default: qfile.txt] \
     -n [Total number of steps in MCMC; default: 1000000] \
     -x [Sample (print) every X steps from the MCMC run; default: 1000] \
     -i [Size of proposals for frequencies of inner nodes; default: 0.01] \
