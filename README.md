@@ -43,7 +43,7 @@ The command line options for PhenoGraph are as follows. The first five options (
     % -g [GWAS input file name; default: NULL] \
     % -e [Neutral input file name; default: NULL] \
     % -r [Graph R file name; default: NULL] \
-    % -o [MCMC output file name; default: NULL] \
+    % -o [MCMC trace output file name; default: NULL] \
     % -q [Q_B statistic output file name; default: NULL] \
     % -n [Total number of steps in MCMC; default: 1000000] \
     % -x [Sample (print) every X steps from the MCMC run; default: 1000] \
