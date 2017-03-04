@@ -1,6 +1,20 @@
 # PhenoGraph
 
-To run, PhenoGraph requires:
+# Required Libraries
+
+PhenoGraph requires the following R libraries:
+- opt-parse
+- admixturegraph
+- msm
+- reshape2
+- pscl
+- vioplot
+- parallel
+
+
+# Input files
+
+To run, PhenoGraph 3 input files:
 - a GWAS input file
 - a neutral input file
 - a graph parameter file
