@@ -51,6 +51,7 @@ The command line options for PhenoGraph are as follows. The first 3 options (inp
     -s [Standard deviation for alpha prior; default: 0.1] \
     -t [Size of proposals for alpha parameters; default: 0.02] \
     -u [Spike and slab factor; default: 25]
+    -f [Number by which maximum Q_B score will be divided to obtain Q_B cutoff; default: 3]
 
 
 Here is an example of a full command line:
@@ -66,7 +67,8 @@ Here is an example of a full command line:
     -i 0.01 \
     -s 0.1 \
     -t 0.02 \
-    -u 25
+    -u 25 \
+    -f 3
 
 
 # Output files
