@@ -2,7 +2,7 @@
 
 # Required Libraries
 
-PhenoGraph requires the following R libraries:
+PhenoGraph requires the following R libraries. Make sure they are installed before you run it:
 - optparse
 - admixturegraph
 - msm
