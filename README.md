@@ -37,7 +37,7 @@ This file contains information about the admixture graph, which should have been
 
 # Running PhenoGraph
 
-The command line options for PhenoGraph are as follows:
+The command line options for PhenoGraph are as follows. The first five options (file names) are required:
 
     % Rscript RunPhenotype.R \
     % -g [GWAS input file name; default: NULL] \
