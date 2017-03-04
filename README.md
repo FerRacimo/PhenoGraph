@@ -14,7 +14,7 @@ PhenoGraph requires the following R libraries:
 
 # Input files
 
-To run, PhenoGraph 3 input files:
+To run, PhenoGraph requires 3 input files:
 - a GWAS input file
 - a neutral input file
 - a graph parameter file
