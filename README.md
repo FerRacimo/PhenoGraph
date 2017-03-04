@@ -72,8 +72,8 @@ Here is an example of a full command line:
 # Output files
 
 PhenoGraph should produce two output files:
-- The list of Q_B statistics for each branch in the graph
-- The trace from the MCMC run
+- The list of Q_B statistics for each branch in the graph (fast to compute; printed out a few seconds after the program is started)
+- The trace from the MCMC run (slower to compute; may take hours or days, depending on the complexity of the graph)
 
 # Plotting output
 
