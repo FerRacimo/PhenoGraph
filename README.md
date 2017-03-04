@@ -37,7 +37,7 @@ This file contains information about the admixture graph, which should have been
 
 # Running PhenoGraph
 
-The command line options for PhenoGraph are as follows. The first 3 options (input file names) are required:
+The command line options for PhenoGraph are as follows. The first 3 options (input file names) are required. We recommend tweaking the size of the proposal steps to obtain adequate MCMC acceptance probabilities.
 
     Rscript RunPhenotype.R \
     -g [GWAS input file name; default: NULL] \
