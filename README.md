@@ -3,7 +3,7 @@
 # Required Libraries
 
 PhenoGraph requires the following R libraries:
-- opt-parse
+- optparse
 - admixturegraph
 - msm
 - reshape2
