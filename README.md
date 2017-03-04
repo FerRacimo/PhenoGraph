@@ -75,4 +75,7 @@ PhenoGraph should produce two output files:
 - The list of Q_B statistics for each branch in the graph
 - The trace from the MCMC run
 
+# Plotting output
+
+[TO DO]
 
