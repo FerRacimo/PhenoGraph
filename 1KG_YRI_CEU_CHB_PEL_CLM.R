@@ -57,7 +57,7 @@ supergraph <- OrderBranches(supergraph)
 plot(supergraph[[1]], show_inner_node_labels = TRUE, show_admixture_labels = TRUE)
 
 
- if(exists("gwasfile")){
+if(exists("gwasfile")){
 
 # Load GWAS data  
 filename <- gwasfile
@@ -74,5 +74,7 @@ neut_leaves_freqs <- ObtainFreqs(neut_leaves_counts)
 
 # Calculate chi-squared statistics
 stats <- ChiSquared(supergraph,leaves_freqs,effects,neut_leaves_freqs)
+qtab <- as.matrix(round(stats,3))
+write.table(qtab,file=qfile,quote=FALSE,col.names=FALSE,row.names=TRUE)
 
 }

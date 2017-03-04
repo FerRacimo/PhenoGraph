@@ -1,7 +1,8 @@
 PhenoGraph <- function(tracefile,leaves_counts,neut_leaves_counts,effects,runmode,branchcandidate,numsteps,numsample,innerfreqs_proposize,alpha_prior_stdev,alpha_proposize,ssfactor){
 
-print(branchcandidate) 
-
+#print(branchcandidate) 
+print("Running MCMC...")
+  
 # Run mode
 #runmode <- "neutral"; branchcandidate <- NaN
 #runmode <- "alphas"; branchcandidate <- NaN
