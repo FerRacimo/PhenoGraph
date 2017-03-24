@@ -8,7 +8,6 @@ PhenoGraph requires the following R libraries. Make sure they are installed befo
 - msm
 - reshape2
 - pscl
-- vioplot
 - parallel
 
 
