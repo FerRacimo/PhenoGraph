@@ -9,7 +9,7 @@ PhenoGraph requires the following R libraries. Make sure they are installed befo
 - reshape2
 - pscl
 - parallel
-
+- ggplot2
 
 # Input files
 
