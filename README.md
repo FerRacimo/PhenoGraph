@@ -46,9 +46,9 @@ The command line options for PhenoGraph are as follows. The first 3 options (inp
     -q [Q_B statistic output file name; default: qfile.txt] \
     -n [Total number of steps in MCMC; default: 1000000] \
     -x [Sample (print) every X steps from the MCMC run; default: 1000] \
-    -i [Size of proposals for frequencies of inner nodes; default: 0.1] \
+    -i [Size of std dev of proposal distribution for frequencies of inner nodes; default: 0.1] \
     -s [Standard deviation for alpha prior; default: 0.1] \
-    -t [Size of proposals for alpha parameters; default: 0.02] \
+    -t [Size of std dev of proposal distribution for alpha parameters; default: 0.02] \
     -u [In spike-and-slab prior, number by which std dev of wide Normal dist. will be divived to obtain std dev of narrow Normal dist.; default: 25]
     -f [Number by which maximum Q_B score will be divided to obtain Q_B cutoff; default: 3]
 
@@ -63,7 +63,7 @@ Here is an example of a full command line:
     -q qfile_HEIGHT_1KG_YRI_CEU_CHB_PEL_CLM.txt \
     -n 1000000 \
     -x 1000 \
-    -i 0.01 \
+    -i 0.1 \
     -s 0.1 \
     -t 0.02 \
     -u 25 \
