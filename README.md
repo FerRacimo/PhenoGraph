@@ -73,7 +73,10 @@ Here is an example of a full command line:
 # Output files
 
 PhenoGraph should produce two output files:
-- The list of Q_B statistics for each branch in the graph (fast to compute; printed out a few seconds after the program is started)
+- The list of test statistics for each branch in the graph (fast to compute; printed out a few seconds after the program is started). This contains:
+    - The Q_B statistic (unsigned, chi-squared distributed with 1 degree of freedom under neutrality)
+    - The q_B statistic (signed, Normal(0,1) distributed under neutrality)
+    - The P-value for the Q_B statistic
 - The trace from the MCMC run (slower to compute; may take hours or days, depending on the complexity of the graph and the number of trait-affecting SNPs)
 
 # Plotting output
