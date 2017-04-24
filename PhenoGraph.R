@@ -1,4 +1,4 @@
-PhenoGraph <- function(tracefile,leaves_counts,neut_leaves_counts,effects,runmode,branchcandidate,numsteps,numsample,innerfreqs_proposize,alpha_prior_stdev,alpha_proposize,ssfactor){
+PhenoGraph <- function(tracefile,leaves_counts,neut_leaves_counts,effects,runmode,branchcandidate,numsteps,numsample,innerfreqs_proposize,alpha_prior_stdev,alpha_proposize,ssfactor,qbfactor=3){
 
 #print(branchcandidate) 
 print("Running MCMC...")
@@ -54,7 +54,8 @@ graphedges <- supergraph[[2]]
 deconsgraph <- DeconstructGraph(input_graph)
 
 # Compute chi-squared statistics
-teststat <- ChiSquared(supergraph,input_leaf_freqs,effects,neut_leaf_freqs)
+teststats <- ChiSquared(supergraph,input_leaf_freqs,effects,neut_leaf_freqs)
+Qstat <- teststats[,1]
 
 # Initialize MCMC
 old_innerfreqs <- start_innerfreqs
@@ -122,7 +123,7 @@ for( i in seq(1,numsteps)){
     
     # Propose new alphas
     if(runmode == "alphas"){
-      new_alphas <- propose_alphasB(old_alphas,alpha_proposize,teststat)
+      new_alphas <- propose_alphasB(old_alphas,alpha_proposize,Qstat,qbfactor)
     } else if(runmode == "onealpha"){
       alphaidx <- which(old_alphas[,1] == branchcandidate[1] & old_alphas[,2] == branchcandidate[2])
       alphatochange <- old_alphas[alphaidx,]

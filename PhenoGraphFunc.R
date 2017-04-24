@@ -4,7 +4,7 @@ library("reshape2")
 library("pscl")
 library("vioplot")
 library("parallel")
-
+library("ggplot2")
 
 # Function for breakin graph into component pieces (from admixture graph package)
 break_graph <- function(graph) {
@@ -435,11 +435,11 @@ propose_innerfreqsB <- function(freqs,proposize,numSNPs){
 #  return(newalphas)
 #}
 
-propose_alphasB <- function(alphas,proposize,teststat=c()){
+propose_alphasB <- function(alphas,proposize,teststat=c(),qbfactor){
   numalphas <- dim(alphas)[1]
   if(length(teststat) > 0){
-    cutoff <- max(teststat) / 3
-    #cutoff <- qchisq(0.95, df=1)
+    if(qbfactor != 0){cutoff <- max(teststat) / qbfactor
+    } else{ cutoff <- qchisq( 1 - (0.05/length(teststat)), df=1)}
     teststat[which(teststat < cutoff)] <- 0
     weightsalphas = as.vector(teststat/sum(teststat))
     tochangeidx <- sample(seq(1,numalphas),1,prob = weightsalphas)
@@ -916,8 +916,7 @@ ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs){
   })
   colnames(Fmat) <- colnames(neut_leaves_freqs)
   rownames(Fmat) <- colnames(neut_leaves_freqs)
-  
-  
+ 
   
   # Compute contributions of each branch to each leaf
   contribmat <- c()
@@ -945,30 +944,47 @@ ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs){
   # Scale by average genetic value
   #meangen <- as.vector(scale(meangen,scale=TRUE))
   meangen <- (meangen - mean(meangen))
-  
-  # Compute the total genetic variance over all populations
+
+  # Compute the estimated ancestral genetic variance over all populations
   meanfreqs <- apply(leaves_freqs,1,mean)
-  varmean <- mean(sapply(seq(1,dim(leaves_freqs)[2]),function(i){ sum(meanfreqs[i]*(1-meanfreqs[i])*effects^2)}))
   
-  # Compute test statistic
-  teststat <- apply(contribmat,1, function(x){
+  varmean <- sum(sapply(seq(1,length(meanfreqs)),function(i){
+  score = 2*meanfreqs[i]*(1-meanfreqs[i])*effects[i]^2
+  return(score)
+  }))
+
+
+  # Compute Q_B test statistic
+  Qteststat <- apply(contribmat,1, function(x){
+    #print(varmean)
     lambda <- varmean * (t(x) %*% Fmat %*% x)
     numerator <- (meangen %*% x)^2
     final <- numerator / (lambda)
     return(final)
   } )
   
+  # Compute q_B test statistic
+  qteststat <- apply(contribmat,1, function(x){
+    #print(varmean)
+    lambda <- varmean * (t(x) %*% Fmat %*% x)
+    numerator <- (meangen %*% x)
+    final <- numerator / sqrt(lambda)
+    return(final)
+  } )
+
+
   #barplot(teststat,cex.names=0.5)
   #abline(h=100,col="red")
   
   branchorder <- apply(graphedges,1,function(x){paste(as.character(x[1]),as.character(x[2]),sep="_")})
-  teststat <- teststat[branchorder]
   
-  
-  #print(teststat)
-  #settozero <- names(which(teststat < cutoff))
-  
-  return(teststat)
+  Qteststat <- Qteststat[branchorder]
+  Pval <- 1 - pchisq(Qteststat,1)
+  qteststat <- qteststat[branchorder]
+
+  allstats <- cbind(Qteststat,qteststat,Pval)
+
+  return(allstats)
 }
 
 
@@ -1015,7 +1031,7 @@ CorrectPos <- function(inputvals,coords,listvertices,root){
     elemx <- coords[which(listvertices == elem),1]
     elemy <- coords[which(listvertices == elem),2]
     parenty <- as.numeric(done[which(done[,1] == parent),3])
-    addy <- max(0.05,inputvals[which(as.character(inputvals[,1]) == elem & as.character(inputvals[,2]) == parent),3])
+    addy <- max(0.075,inputvals[which(as.character(inputvals[,1]) == elem & as.character(inputvals[,2]) == parent),3])
     newy <- parenty - addy
     
     done <- rbind(done, c(elem,elemx,newy))
@@ -1089,6 +1105,8 @@ image.scale <- function(z, zlim, col = heat.colors(12),
 }
 
 
+
+
 # Make a graph network plot
 MakeGraphPlotInterior <- function(inputvals,selcoefs,root,title,minsel,maxsel){
   
@@ -1111,7 +1129,7 @@ MakeGraphPlotInterior <- function(inputvals,selcoefs,root,title,minsel,maxsel){
   E(g)$width <- rep(5,length(E(g)$drifts))
   
   coords <- layout.reingold.tilford(g,root="r")
-
+  
   listvertices <- lapply(list.vertex.attributes(g),function(x) get.vertex.attribute(g,x))[[1]]
   
   coords <- CorrectPos(inputvals,coords,listvertices,root)
@@ -1122,7 +1140,8 @@ MakeGraphPlotInterior <- function(inputvals,selcoefs,root,title,minsel,maxsel){
   layout.show(2)
   
   par(mar=c(1,1,1,1))
-  plot(g,layout = coords,edge.color= E(g)$color,edge.width=E(g)$width,edge.arrow.size=E(g)$width/5,main=title)
+  plot(g,layout = coords,edge.color=E(g)$color,edge.width=E(g)$width,edge.arrow.mode=2,edge.arrow.size=E(g)$width/6,edge.arrow.width=E(g)$width/4,main=title,vertex.color="white",vertex.frame.color="white",vertex.label.color="black")
+  #plot(g,layout = coords,edge.color=E(g)$color,edge.width=E(g)$width,edge.arrow.mode=2,edge.arrow.size=E(g)$width/5,main=title,vertex.color="white",vertex.frame.color="white",vertex.label.color="black")
   
   par(mar=c(4,3,1,3))
   image.scale( col=colfunc(length(breaks)-1), breaks=breaks, horiz=TRUE,xlab="selection parameter (alpha)",ylab="")
@@ -1150,6 +1169,164 @@ MakeGraphPlot <- function(tablename,edgevalues,root,phenotype,minsel,maxsel){
   MakeGraphPlotInterior(merged[c(1,2,3)],as.numeric(as.character(merged[,4])),"r",phenotype,minsel,maxsel)
   
 }
+
+
+
+AlphaBoxPlot <- function(table,titleplot,addselline=FALSE,selline){
+  SNPs <- max(sapply(colnames(table),function(x){as.numeric(paste(unlist(strsplit(gsub("[^0-9]", "", x),"")),collapse=""))}),na.rm=TRUE)
+  nodes <- length(unique(sapply(colnames(table)[grep("step|nodevar|nodevalue|alpha|logprob|logprior|propss|acceptance",colnames(table),invert=TRUE)],function(x){gsub('[[:digit:]]+', '', x)})))
+  alphacols <- which(sapply(colnames(table),function(x){grep("alpha_",x)}) == 1)
+  data <- c()
+  for(i in alphacols){data <- cbind(data,jitter(table[,i],0.1))}
+  colnames(data) <- colnames(table)[alphacols]
+  colnames(data) <- sapply(colnames(data),function(x){gsub("alpha_","",x)})
+  data <- melt(as.data.frame(data))
+  colnames(data) <- c("branch","alpha")
+  finalplot <- ggplot(data, aes(branch, alpha)) + geom_boxplot(width=0.4,fill="light blue") + geom_hline(yintercept=0,colour="black") + ggtitle(titleplot) + theme(plot.title = element_text(hjust = 'center')) + coord_cartesian(ylim = c(-0.3, 0.3)) + theme_minimal()
+  if(addselline == TRUE){finalplot <- finalplot + geom_hline(yintercept=selline,colour="red")}
+  return(finalplot)
+}
+
+
+
+
+
+
+SimulateWF <- function(supergraph,numSNPs,meaneffect,heritability,selmode,selbranch,selalpha,startmode="beta",sampsize=NaN,effectvec=NaN,filename="simul_output.txt"){
+  
+  rootname <- names(which(apply(supergraph[[1]]$parents,1,sum)==0))
+  nodeorder <- supergraph[[1]]$nodes
+  edgevalues <- supergraph[[2]]
+  leaves <- supergraph[[1]]$leaves
+  
+  broken_graph <- break_graph(supergraph[[1]])
+  
+  #print(broken_graph)
+  
+  
+  if(length(broken_graph$admixtures) > 0){
+    admnames <- t(matrix(unlist(broken_graph$admixtures),nrow=4))
+    admvalues <- supergraph[[3]]
+    admlogic <- TRUE
+  } else{
+    admnames <- NaN
+    admvalues <- NaN
+    admlogic <- FALSE
+  }
+  
+  allSNPs <- t(sapply(seq(1,numSNPs), function(x){
+    
+    
+    # Frequency at root
+    if(startmode == "allmid"){
+      rootvalue <- 0.5
+    } else if(startmode == "range"){
+      rootvalue <- runif(1,0.1,0.9)
+    } else if(startmode == "beta")  {
+      rootvalue <- rbeta(1,2,2)
+    } else if(startmode == "unif") {
+      rootvalue <- runif(1,0,1)
+    }
+    
+    # Draw effect sizes - Loh et al. (2015)
+    alphaeffect <- -0.28
+    if(is.na(sum(effectvec))){
+      sdeffect <- sqrt( (heritability / numSNPs) * (rootvalue*(1-rootvalue))^(1 + alphaeffect) )
+      draweffect <- rnorm(1,meaneffect,sdeffect)
+    } else{
+      draweffect <- sample(effectvec,1)
+    }
+    names(draweffect) <- "effect"
+    
+    
+    nodevalues <- t(matrix(c(rootname,rootvalue)))
+    for(i in seq(1,dim(edgevalues)[1])){
+      #print(i)
+      
+      parentname <- as.character(edgevalues[i,2])
+      childname <- as.character(edgevalues[i,1])
+      drift <- as.numeric(edgevalues[i,3])
+      parentvalue <- as.numeric(nodevalues[which(nodevalues[,1] == parentname),2])
+      variance <- parentvalue*(1-parentvalue)*drift
+      #print(parentvalue)
+      #print(variance)
+      
+      #print(nodevalues)
+      #print(c(parentname,childname,drift,parentvalue,variance))
+      
+      # Add selection
+      if(selmode == "byeffectsize"){
+        if( parentname == selbranch[2] & childname == selbranch[1] ){
+          parentvalue <- parentvalue + parentvalue*(1-parentvalue)*selalpha*draweffect
+        }
+      } else if(selmode == "byeffectsign"){
+        if( parentname == selbranch[2] & childname == selbranch[1] ){
+          parentvalue <- parentvalue + parentvalue*(1-parentvalue)*selalpha*sign(draweffect)
+        }
+      }
+      
+      # Check for admixture
+      add = TRUE
+      if(admlogic == TRUE){
+        if(childname %in% admnames[,1]){
+          if(childname %in% nodevalues[,1]){
+            probunif <- runif(1,0,1)
+            admrateline <- admnames[which(admnames[,1] == childname),]
+            admratename <- admrateline[4]
+            admratevalue <- admvalues[which(as.character(admvalues[,1]) == admratename),2]
+            if(parentvalue == admrateline[2]){ admrate <- admratevalue
+            } else{ admrate <- 1 - admratevalue }
+            if(probunif < admrate){
+              #print(c(x,i))
+              
+              #print(c(parentvalue,variance))
+              
+              drawnvalue <- SimulateWithFix(parentvalue,variance)
+              
+              nodevalues[which(nodevalues[,1] == childname),] <- c(childname,drawnvalue)
+              add = FALSE
+            } else{ add = FALSE }
+          }
+        }
+      }
+      
+      if(add == TRUE){
+        #print(c(parentvalue,variance))
+        drawnvalue <- SimulateWithFix(parentvalue,variance)
+        nodevalues <- rbind(nodevalues,c(childname,drawnvalue))
+      }
+    }
+    
+    nodenames <- nodevalues[,1]
+    nodevalues <- as.numeric(nodevalues[,2])
+    names(nodevalues) <- nodenames
+    nodevalues <- nodevalues[nodeorder]
+    return(c(nodevalues,draweffect))
+  }))
+  
+  alleffects <- allSNPs[,c("effect")]
+  leafSNPs <- allSNPs[,leaves]
+  
+  # Binomial sampling
+  if( !is.na(sampsize) ){
+    leafSNPs <- apply(leafSNPs, 1:2, function(x){ 
+      probsamp <- x
+      dercounts <- rbinom(1,sampsize,probsamp)
+      return( paste(sampsize - dercounts, dercounts,sep=",") )
+    })
+  }
+  
+  output <- cbind("X","X","X",alleffects,leafSNPs)
+  colnames(output)[1] <- "CHROM"
+  colnames(output)[2] <- "POS"
+  colnames(output)[3] <- "SNPID"
+  
+  write.table(output,file=filename,col.names=TRUE,row.names=FALSE,quote=FALSE,sep="\t",append=FALSE)
+  
+  return(paste("Simulation finished and printed to",filename,sep=" "))
+}
+
+
 
 
 

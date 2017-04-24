@@ -1,5 +1,5 @@
 # Plot graph
-plot(supergraph[[1]], show_inner_node_labels = TRUE, show_admixture_labels = TRUE)
+#plot(supergraph[[1]], show_inner_node_labels = TRUE, show_admixture_labels = TRUE)
 
 
 if(exists("gwasfile")){
@@ -14,12 +14,13 @@ if(exists("gwasfile")){
   # Load Neutral data
   neutfilename <- neutfile
   neutdata <- LoadCounts(neutfilename, leaves)
-  neut_leaves_counts <- as.data.frame(data[,seq(5,dim(neutdata)[2])])
+  neut_leaves_counts <- as.data.frame(neutdata[,seq(5,dim(neutdata)[2])])
   neut_leaves_freqs <- ObtainFreqs(neut_leaves_counts)
   
   # Calculate chi-squared statistics
   stats <- ChiSquared(supergraph,leaves_freqs,effects,neut_leaves_freqs)
-  qtab <- as.matrix(round(stats,3))
-  write.table(qtab,file=qfile,quote=FALSE,col.names=FALSE,row.names=TRUE)
+  qtab <- cbind(round(stats[,1],3),round(stats[,2],3),stats[,3])
+  colnames(qtab) <- c("Q_B","q_B","Pval")
+  write.table(qtab,file=qfile,quote=FALSE,col.names=TRUE,row.names=TRUE)
   
 }
