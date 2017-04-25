@@ -75,21 +75,18 @@ for(simidx in seq(1,numsim)){
 }
 
 
+#selalpha <- 0.1
+#allstats <- c()
+#for(i in seq(1,20)){
+#  source("SimpleGraph.R")
+#  test <- ChiSquared(supergraph,leaves_freqs,effects,neut_leaves_freqs)
+#  print(test)
+#  allstats <- rbind(allstats,test)
+#}
 
-allstats <- c()
-for(i in seq(1,10)){
-  source("SimpleGraph.R")
-  test <- ChiSquared(supergraph,leaves_freqs,effects,neut_leaves_freqs)
-  print(test)
-  allstats <- rbind(allstats,test)
-}
+#plot(density(allstats[,1]),xlim=c(0,40))
+#lines(seq(0.1,40,0.1),dchisq(seq(0.1,40,0.1),df=1),col="red")
 
-
-plot(density(allstats[,1]),xlim=c(0,40))
-plot(hist(allstats,freq=TRUE))
-lines(seq(0.1,40,0.1),dchisq(seq(0.1,40,0.1),df=1),col="red")
-
-
-
+#plot(hist(allstats[,3]))
 
 

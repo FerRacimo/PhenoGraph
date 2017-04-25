@@ -902,18 +902,30 @@ ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs){
   deconsgraph <- DeconstructGraph(supergraph)
   leaves <- supergraph[[1]]$leaves
   
-  checkseg <- which( apply(leaves_freqs,1,sum)/length(leaves) < 0.95  & apply(leaves_freqs,1,sum)/length(leaves) > 0.05 )
+  checkseg <- which( apply(leaves_freqs,1,sum)/length(leaves) < 0.99  & apply(leaves_freqs,1,sum)/length(leaves) > 0.01 )
   leaves_freqs <- leaves_freqs[checkseg,]
   effects <- effects[checkseg]
   
   # Compute empirical covariance matrix
-  checksegneut <- which( apply(neut_leaves_freqs,1,sum)/length(leaves) < 0.95  & apply(neut_leaves_freqs,1,sum)/length(leaves) > 0.05 )
+  checksegneut <- which( apply(neut_leaves_freqs,1,sum)/length(leaves) < 0.99  & apply(neut_leaves_freqs,1,sum)/length(leaves) > 0.01 )
   neut_leaves_freqs <- neut_leaves_freqs[checksegneut,]
+  
+  neut_leaves_freqs_means <- apply(neut_leaves_freqs, 1, mean)
+  mean_hetero <- neut_leaves_freqs_means*(1-neut_leaves_freqs_means)
+  numSNPs <- length(neut_leaves_freqs_means)
+  
+  #Fmat <- sapply(seq(1,dim(neut_leaves_freqs)[2]),function(x){
+  #  sapply(seq(1,dim(neut_leaves_freqs)[2]),function(y){
+  #    cov(neut_leaves_freqs[,x],neut_leaves_freqs[,y])
+  #  })
+  #})
+  
   Fmat <- sapply(seq(1,dim(neut_leaves_freqs)[2]),function(x){
     sapply(seq(1,dim(neut_leaves_freqs)[2]),function(y){
-      cov(neut_leaves_freqs[,x],neut_leaves_freqs[,y])
+      cov(neut_leaves_freqs[,x]/sqrt(mean_hetero), neut_leaves_freqs[,y]/sqrt(mean_hetero))
     })
   })
+  
   colnames(Fmat) <- colnames(neut_leaves_freqs)
   rownames(Fmat) <- colnames(neut_leaves_freqs)
  
@@ -940,6 +952,7 @@ ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs){
   
   # Compute mean genetic values
   meangen <- apply(leaves_freqs * effects, 2, function(x){sum(x)})
+  #meangen <- apply(2 * leaves_freqs * effects, 2, function(x){sum(x)})
   
   # Scale by average genetic value
   #meangen <- as.vector(scale(meangen,scale=TRUE))
@@ -949,7 +962,9 @@ ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs){
   meanfreqs <- apply(leaves_freqs,1,mean)
   
   varmean <- sum(sapply(seq(1,length(meanfreqs)),function(i){
-  score = 2*meanfreqs[i]*(1-meanfreqs[i])*effects[i]^2
+  score = meanfreqs[i]*(1-meanfreqs[i])*effects[i]^2
+  #score = 2*meanfreqs[i]*(1-meanfreqs[i])*effects[i]^2
+  #score = 4*meanfreqs[i]*(1-meanfreqs[i])*effects[i]^2
   return(score)
   }))
 
