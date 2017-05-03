@@ -174,7 +174,7 @@ for( i in seq(1,numsteps)){
 
   # Print out values
   genvalues <- apply(old_innerfreqs,2,function(x){sum(2*x*effects)})
-  genvar <- apply(old_innerfreqs,2, function(x){sum(2*2*x*(1-x)*effects^2)})
+  genvar <- apply(old_innerfreqs,2, function(x){sum(2*x*(1-x)*effects^2)})
   finalvec <- c(i,as.vector(old_innerfreqs),genvalues,genvar,as.numeric(old_alphas[,3]),sum(log_prob_old_graph)+sum(log_prob_old_binom),log_old_prior,old_propss,acceptance_rate_freqs,acceptance_rate_alphas)
   if( (i %% numsample) == 0){
     write(paste(finalvec,collapse="\t"),file=tracefile,append=TRUE)
