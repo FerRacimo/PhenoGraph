@@ -2,7 +2,6 @@ library("admixturegraph")
 library("msm")
 library("reshape2")
 library("pscl")
-library("vioplot")
 library("parallel")
 library("ggplot2")
 
@@ -520,154 +519,6 @@ RemoveFixed <- function(nodes){
 }
 
 
-SimulateWithFix <- function(parentvalue,variance){
-  
-  if(parentvalue == 1){ drawnvalue <- 1
-  } else if(parentvalue == 0){ drawnvalue <- 0
-  } else{ drawnvalue <- rnorm(1,parentvalue,sqrt(variance))
-  }
-  if(drawnvalue > 1){ drawnvalue <- 1
-  } else if(drawnvalue < 0){ drawnvalue <- 0}
-  
-  return(drawnvalue)
-  
-}
-
-
-SimulateNorm <- function(supergraph,numSNPs,meaneffect,heritability,selmode,selbranch,selalpha,startmode="beta",sampsize=NaN,effectvec=NaN,filename="simul_output.txt"){
-
-rootname <- names(which(apply(supergraph[[1]]$parents,1,sum)==0))
-nodeorder <- supergraph[[1]]$nodes
-edgevalues <- supergraph[[2]]
-leaves <- supergraph[[1]]$leaves
-
-broken_graph <- break_graph(supergraph[[1]])
-
-#print(broken_graph)
-
-
-if(length(broken_graph$admixtures) > 0){
-  admnames <- t(matrix(unlist(broken_graph$admixtures),nrow=4))
-  admvalues <- supergraph[[3]]
-  admlogic <- TRUE
-} else{
-  admnames <- NaN
-  admvalues <- NaN
-  admlogic <- FALSE
-}
-
-allSNPs <- t(sapply(seq(1,numSNPs), function(x){
-  
-
-  # Frequency at root
-  if(startmode == "allmid"){
-    rootvalue <- 0.5
-  } else if(startmode == "range"){
-    rootvalue <- runif(1,0.1,0.9)
-  } else if(startmode == "beta")  {
-    rootvalue <- rbeta(1,2,2)
-  } else if(startmode == "unif") {
-    rootvalue <- runif(1,0,1)
-  }
-  
-  # Draw effect sizes - Loh et al. (2015)
-  alphaeffect <- -0.28
-  if(is.na(sum(effectvec))){
-    sdeffect <- sqrt( (heritability / numSNPs) * (rootvalue*(1-rootvalue))^(1 + alphaeffect) )
-    draweffect <- rnorm(1,meaneffect,sdeffect)
-  } else{
-    draweffect <- sample(effectvec,1)
-  }
-  names(draweffect) <- "effect"
-  
-  
-  nodevalues <- t(matrix(c(rootname,rootvalue)))
-  for(i in seq(1,dim(edgevalues)[1])){
-    #print(i)
-    
-    parentname <- as.character(edgevalues[i,2])
-    childname <- as.character(edgevalues[i,1])
-    drift <- as.numeric(edgevalues[i,3])
-    parentvalue <- as.numeric(nodevalues[which(nodevalues[,1] == parentname),2])
-    variance <- parentvalue*(1-parentvalue)*drift
-    #print(parentvalue)
-    #print(variance)
-    
-    #print(nodevalues)
-    #print(c(parentname,childname,drift,parentvalue,variance))
-    
-    # Add selection
-    if(selmode == "byeffectsize"){
-      if( parentname == selbranch[2] & childname == selbranch[1] ){
-          parentvalue <- parentvalue + parentvalue*(1-parentvalue)*selalpha*draweffect
-      }
-    } else if(selmode == "byeffectsign"){
-      if( parentname == selbranch[2] & childname == selbranch[1] ){
-          parentvalue <- parentvalue + parentvalue*(1-parentvalue)*selalpha*sign(draweffect)
-      }
-    }
-    
-    # Check for admixture
-    add = TRUE
-    if(admlogic == TRUE){
-      if(childname %in% admnames[,1]){
-        if(childname %in% nodevalues[,1]){
-          probunif <- runif(1,0,1)
-          admrateline <- admnames[which(admnames[,1] == childname),]
-          admratename <- admrateline[4]
-          admratevalue <- admvalues[which(as.character(admvalues[,1]) == admratename),2]
-          if(parentvalue == admrateline[2]){ admrate <- admratevalue
-          } else{ admrate <- 1 - admratevalue }
-          if(probunif < admrate){
-            #print(c(x,i))
-            
-            #print(c(parentvalue,variance))
-            
-            drawnvalue <- SimulateWithFix(parentvalue,variance)
-            
-            nodevalues[which(nodevalues[,1] == childname),] <- c(childname,drawnvalue)
-            add = FALSE
-          } else{ add = FALSE }
-        }
-      }
-    }
-    
-    if(add == TRUE){
-      #print(c(parentvalue,variance))
-      drawnvalue <- SimulateWithFix(parentvalue,variance)
-      nodevalues <- rbind(nodevalues,c(childname,drawnvalue))
-    }
-  }
-  
-  nodenames <- nodevalues[,1]
-  nodevalues <- as.numeric(nodevalues[,2])
-  names(nodevalues) <- nodenames
-  nodevalues <- nodevalues[nodeorder]
-  return(c(nodevalues,draweffect))
-}))
-
-alleffects <- allSNPs[,c("effect")]
-leafSNPs <- allSNPs[,leaves]
-
-# Binomial sampling
-if( !is.na(sampsize) ){
-  leafSNPs <- apply(leafSNPs, 1:2, function(x){ 
-    probsamp <- x
-    dercounts <- rbinom(1,sampsize,probsamp)
-    return( paste(sampsize - dercounts, dercounts,sep=",") )
-    })
-}
-
-output <- cbind("X","X","X",alleffects,leafSNPs)
-colnames(output)[1] <- "CHROM"
-colnames(output)[2] <- "POS"
-colnames(output)[3] <- "SNPID"
-
-write.table(output,file=filename,col.names=TRUE,row.names=FALSE,quote=FALSE,sep="\t",append=FALSE)
-
-return(paste("Simulation finished and printed to",filename,sep=" "))
-}
-
 
 # Get child-ancestor connection possibly involving more than one intermediate parent 
 GetConnection <- function(child,parent,finaledges,graphedges){
@@ -896,7 +747,7 @@ norm_vec <- function(x) sqrt(sum(x^2))
 
 
 
-ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs){
+ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs,total=FALSE){
   
   graphedges <- supergraph[[2]]
   deconsgraph <- DeconstructGraph(supergraph)
@@ -931,6 +782,7 @@ ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs){
  
   
   # Compute contributions of each branch to each leaf
+  if(total == FALSE){
   contribmat <- c()
   contribmat_names <- c()
   for(branchidx in seq(1,dim(graphedges)[1])){
@@ -945,17 +797,15 @@ ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs){
   
   # Standardize vectors to be of unit length
   contribmat <- t(apply(contribmat,1, function(x) {
-    #x <- as.vector(scale(x,scale=FALSE))
     x <- x - mean(x)
     return(x / norm_vec(x))
   }))
+  }
   
   # Compute mean genetic values
   meangen <- apply(leaves_freqs * effects, 2, function(x){sum(x)})
-  #meangen <- apply(2 * leaves_freqs * effects, 2, function(x){sum(x)})
-  
+
   # Scale by average genetic value
-  #meangen <- as.vector(scale(meangen,scale=TRUE))
   meangen <- (meangen - mean(meangen))
 
   # Compute the estimated ancestral genetic variance over all populations
@@ -963,12 +813,14 @@ ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs){
   
   varmean <- sum(sapply(seq(1,length(meanfreqs)),function(i){
   score = meanfreqs[i]*(1-meanfreqs[i])*effects[i]^2
-  #score = 2*meanfreqs[i]*(1-meanfreqs[i])*effects[i]^2
-  #score = 4*meanfreqs[i]*(1-meanfreqs[i])*effects[i]^2
   return(score)
   }))
-
-
+  
+  if(total == FALSE){
+  contribmat <- contribmat[,names(meangen)]
+  }
+  
+  if(total == FALSE){
   # Compute Q_B test statistic
   Qteststat <- apply(contribmat,1, function(x){
     #print(varmean)
@@ -986,18 +838,25 @@ ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs){
     final <- numerator / sqrt(lambda)
     return(final)
   } )
-
-
-  #barplot(teststat,cex.names=0.5)
-  #abline(h=100,col="red")
   
   branchorder <- apply(graphedges,1,function(x){paste(as.character(x[1]),as.character(x[2]),sep="_")})
-  
   Qteststat <- Qteststat[branchorder]
   Pval <- 1 - pchisq(Qteststat,1)
   qteststat <- qteststat[branchorder]
-
   allstats <- cbind(Qteststat,qteststat,Pval)
+  
+  }
+  
+  if(total == TRUE){
+    
+    # Compute Q_X statistic
+    numerator <- t(meangen) %*% solve(Fmat) %*% meangen
+    denominator <- varmean
+    Qteststat <- numerator / denominator
+    
+    Pval <- 1 - pchisq(Qteststat,qr(Fmat)$rank-1)
+    allstats <- c(Qteststat,NaN,Pval)
+  }
 
   return(allstats)
 }
@@ -1203,11 +1062,21 @@ AlphaBoxPlot <- function(table,titleplot,addselline=FALSE,selline){
 }
 
 
+SimulateNormWithFix <- function(parentvalue,variance){
+  
+  if(parentvalue == 1){ drawnvalue <- 1
+  } else if(parentvalue == 0){ drawnvalue <- 0
+  } else{ drawnvalue <- rnorm(1,parentvalue,sqrt(variance))
+  }
+  if(drawnvalue > 1){ drawnvalue <- 1
+  } else if(drawnvalue < 0){ drawnvalue <- 0}
+  
+  return(drawnvalue)
+  
+}
 
 
-
-
-SimulateWF <- function(supergraph,numSNPs,meaneffect,heritability,selmode,selbranch,selalpha,startmode="beta",sampsize=NaN,effectvec=NaN,filename="simul_output.txt"){
+SimulateNorm <- function(supergraph,numSNPs,meaneffect,heritability,selmode,selbranch,selalpha,startmode="beta",sampsize=NaN,effectvec=NaN,filename="simul_output.txt"){
   
   rootname <- names(which(apply(supergraph[[1]]$parents,1,sum)==0))
   nodeorder <- supergraph[[1]]$nodes
@@ -1244,7 +1113,7 @@ SimulateWF <- function(supergraph,numSNPs,meaneffect,heritability,selmode,selbra
     }
     
     # Draw effect sizes - Loh et al. (2015)
-    alphaeffect <- -0.28
+    alphaeffect <- -0.25
     if(is.na(sum(effectvec))){
       sdeffect <- sqrt( (heritability / numSNPs) * (rootvalue*(1-rootvalue))^(1 + alphaeffect) )
       draweffect <- rnorm(1,meaneffect,sdeffect)
@@ -1296,7 +1165,7 @@ SimulateWF <- function(supergraph,numSNPs,meaneffect,heritability,selmode,selbra
               
               #print(c(parentvalue,variance))
               
-              drawnvalue <- SimulateWithFix(parentvalue,variance)
+              drawnvalue <- SimulateNormWithFix(parentvalue,variance)
               
               nodevalues[which(nodevalues[,1] == childname),] <- c(childname,drawnvalue)
               add = FALSE
@@ -1307,7 +1176,176 @@ SimulateWF <- function(supergraph,numSNPs,meaneffect,heritability,selmode,selbra
       
       if(add == TRUE){
         #print(c(parentvalue,variance))
-        drawnvalue <- SimulateWithFix(parentvalue,variance)
+        drawnvalue <- SimulateNormWithFix(parentvalue,variance)
+        nodevalues <- rbind(nodevalues,c(childname,drawnvalue))
+      }
+    }
+    
+    nodenames <- nodevalues[,1]
+    nodevalues <- as.numeric(nodevalues[,2])
+    names(nodevalues) <- nodenames
+    nodevalues <- nodevalues[nodeorder]
+    return(c(nodevalues,draweffect))
+  }))
+  
+  alleffects <- allSNPs[,c("effect")]
+  leafSNPs <- allSNPs[,leaves]
+  
+  # Binomial sampling
+  if( !is.na(sampsize) ){
+    leafSNPs <- apply(leafSNPs, 1:2, function(x){ 
+      probsamp <- x
+      dercounts <- rbinom(1,sampsize,probsamp)
+      return( paste(sampsize - dercounts, dercounts,sep=",") )
+    })
+  }
+  
+  output <- cbind("X","X","X",alleffects,leafSNPs)
+  colnames(output)[1] <- "CHROM"
+  colnames(output)[2] <- "POS"
+  colnames(output)[3] <- "SNPID"
+  
+  write.table(output,file=filename,col.names=TRUE,row.names=FALSE,quote=FALSE,sep="\t",append=FALSE)
+  
+  return(paste("Simulation finished and printed to",filename,sep=" "))
+}
+
+
+SimulateWFWithFix <- function(parentvalue,Ne,branchnumgen,WFmode,selcoef,tsel,draweffect){
+  
+  if(parentvalue == 1){ drawnvalue <- 1
+  } else if(parentvalue == 0){ drawnvalue <- 0
+  } else{ 
+    
+    drawnvalue <- parentvalue
+    if(WFmode == "neutral"){
+      for( gen in seq(1,branchnumgen)){
+        drawnvalue <- rbinom(1,2*Ne,drawnvalue)/(2*Ne)
+      }
+    } else if(WFmode == "byeffectsize"){
+      for( gen in seq(1,tsel)){
+        selterm <- (selcoef*drawnvalue^2 + selcoef*drawnvalue + drawnvalue)/(1 + 2*selcoef*drawnvalue)
+        selprob <- drawnvalue + selterm*draweffect
+        drawnvalue <- rbinom(1,2*Ne,selprob)/(2*Ne)
+      }
+      for( gen in seq(tsel+1,branchnumgen)){
+        drawnvalue <- rbinom(1,2*Ne,drawnvalue)/(2*Ne)
+      }
+    } else if(WFmode == "byeffectsign"){
+      for( gen in seq(1,tsel)){
+        selprob <- (selcoef*sign(draweffect)*drawnvalue^2 + selcoef*sign(draweffect)*drawnvalue + drawnvalue)/(1 + 2*selcoef*sign(draweffect)*drawnvalue)
+        drawnvalue <- rbinom(1,2*Ne,selprob)/(2*Ne)
+      }
+      for( gen in seq(tsel+1,branchnumgen)){
+        drawnvalue <- rbinom(1,2*Ne,drawnvalue)/(2*Ne)
+      }
+    }
+    
+  }
+  
+  if(drawnvalue > 1){ drawnvalue <- 1
+  } else if(drawnvalue < 0){ drawnvalue <- 0}
+  
+  return(drawnvalue)
+  
+}
+
+
+
+SimulateWF <- function(supergraph,numSNPs,meaneffect,heritability,selmode,selbranch,startmode="beta",sampsize=NaN,effectvec=NaN,filename="simul_output.txt",Ne=10000,selcoef=0.001,tsel=100){
+  
+  rootname <- names(which(apply(supergraph[[1]]$parents,1,sum)==0))
+  nodeorder <- supergraph[[1]]$nodes
+  edgevalues <- supergraph[[2]]
+  leaves <- supergraph[[1]]$leaves
+  
+  broken_graph <- break_graph(supergraph[[1]])
+  
+  #print(broken_graph)
+  
+  
+  if(length(broken_graph$admixtures) > 0){
+    admnames <- t(matrix(unlist(broken_graph$admixtures),nrow=4))
+    admvalues <- supergraph[[3]]
+    admlogic <- TRUE
+  } else{
+    admnames <- NaN
+    admvalues <- NaN
+    admlogic <- FALSE
+  }
+  
+  allSNPs <- t(sapply(seq(1,numSNPs), function(x){
+    
+    
+    # Frequency at root
+    if(startmode == "allmid"){
+      rootvalue <- 0.5
+    } else if(startmode == "range"){
+      rootvalue <- runif(1,0.1,0.9)
+    } else if(startmode == "beta")  {
+      rootvalue <- rbeta(1,2,2)
+    } else if(startmode == "unif") {
+      rootvalue <- runif(1,0,1)
+    }
+    
+    # Draw effect sizes - Loh et al. (2015)
+    alphaeffect <- -0.25
+    if(is.na(sum(effectvec))){
+      sdeffect <- sqrt( (heritability / numSNPs) * (rootvalue*(1-rootvalue))^(1 + alphaeffect) )
+      draweffect <- rnorm(1,meaneffect,sdeffect)
+    } else{
+      draweffect <- sample(effectvec,1)
+    }
+    names(draweffect) <- "effect"
+    
+    
+    nodevalues <- t(matrix(c(rootname,rootvalue)))
+    for(i in seq(1,dim(edgevalues)[1])){
+      #print(i)
+      
+      parentname <- as.character(edgevalues[i,2])
+      childname <- as.character(edgevalues[i,1])
+      drift <- as.numeric(edgevalues[i,3])
+      parentvalue <- as.numeric(nodevalues[which(nodevalues[,1] == parentname),2])
+      branchnumgen <- round(drift * 2 * Ne)
+      
+      #print(nodevalues)
+      #print(c(parentname,childname,drift,parentvalue,variance))
+      
+      # Add selection
+      if( parentname == selbranch[2] & childname == selbranch[1] ){
+          WFmode <- selmode
+      } else{ 
+          WFmode <- "neutral"
+      }
+      
+      # Check for admixture
+      add = TRUE
+      if(admlogic == TRUE){
+        if(childname %in% admnames[,1]){
+          if(childname %in% nodevalues[,1]){
+            probunif <- runif(1,0,1)
+            admrateline <- admnames[which(admnames[,1] == childname),]
+            admratename <- admrateline[4]
+            admratevalue <- admvalues[which(as.character(admvalues[,1]) == admratename),2]
+            if(parentvalue == admrateline[2]){ admrate <- admratevalue
+            } else{ admrate <- 1 - admratevalue }
+            if(probunif < admrate){
+              #print(c(x,i))
+              
+              #print(c(parentvalue,variance))
+              drawnvalue <- SimulateWFWithFix(parentvalue,Ne,branchnumgen,WFmode,selcoef,tsel,draweffect)
+              
+              nodevalues[which(nodevalues[,1] == childname),] <- c(childname,drawnvalue)
+              add = FALSE
+            } else{ add = FALSE }
+          }
+        }
+      }
+      
+      if(add == TRUE){
+        #print(c(parentvalue,variance))
+        drawnvalue <- SimulateWFWithFix(parentvalue,Ne,branchnumgen,WFmode,selcoef,tsel,draweffect)
         nodevalues <- rbind(nodevalues,c(childname,drawnvalue))
       }
     }

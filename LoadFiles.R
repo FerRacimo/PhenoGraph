@@ -18,9 +18,12 @@ if(exists("gwasfile")){
   neut_leaves_freqs <- ObtainFreqs(neut_leaves_counts)
   
   # Calculate chi-squared statistics
-  stats <- ChiSquared(supergraph,leaves_freqs,effects,neut_leaves_freqs)
-  qtab <- cbind(round(stats[,1],3),round(stats[,2],3),stats[,3])
-  colnames(qtab) <- c("Q_B","q_B","Pval")
-  write.table(qtab,file=qfile,quote=FALSE,col.names=TRUE,row.names=TRUE)
+  stats <- ChiSquared(supergraph,leaves_freqs,effects,neut_leaves_freqs,total=FALSE)
+  qtab <- cbind(rownames(stats),round(stats[,1],3),round(stats[,2],3),stats[,3])
+  colnames(qtab) <- c("branch","Q_B","q_B","Pval")
+  totalstat <- ChiSquared(supergraph,leaves_freqs,effects,neut_leaves_freqs,total=TRUE)
+  qtab <- rbind(qtab, cbind("Total",round(totalstat[1],3),round(totalstat[2],3),totalstat[3]))
+  
+  write.table(qtab,file=qfile,quote=FALSE,col.names=TRUE,row.names=FALSE)
   
 }

@@ -1,4 +1,4 @@
-PhenoGraph <- function(tracefile,leaves_counts,neut_leaves_counts,effects,runmode,branchcandidate,numsteps,numsample,innerfreqs_proposize,alpha_prior_stdev,alpha_proposize,ssfactor,qbfactor=3){
+PhenoGraph <- function(tracefile,leaves_counts,neut_leaves_counts,effects,runmode,branchcandidate,numsteps,numsample,innerfreqs_proposize,alpha_prior_stdev,alpha_proposize,ssfactor,qbfactor){
 
 #print(branchcandidate) 
 print("Running MCMC...")
@@ -54,7 +54,7 @@ graphedges <- supergraph[[2]]
 deconsgraph <- DeconstructGraph(input_graph)
 
 # Compute chi-squared statistics
-teststats <- ChiSquared(supergraph,input_leaf_freqs,effects,neut_leaf_freqs)
+teststats <- ChiSquared(supergraph,input_leaf_freqs,effects,neut_leaf_freqs,total=FALSE)
 Qstat <- teststats[,1]
 
 # Initialize MCMC
