@@ -4,6 +4,7 @@ library("reshape2")
 library("pscl")
 library("parallel")
 library("ggplot2")
+library("gridExtra")
 
 # Function for breakin graph into component pieces (from admixture graph package)
 break_graph <- function(graph) {
@@ -400,7 +401,7 @@ pbinom <- function(input_leaf_der,input_leaf_tot,innerfreqs){
 # Another function for proposing frequencies (truncated normal)
 #propose_innerfreqsB <- function(freqs,proposize,numSNPs){
 #  freqs <- as.numeric(freqs)
-#  newinnerfreqs_vec <-  rtnorm(length(freqs),freqs,proposize*freqs*(1-freqs),lower=0,upper=1)
+#  newinnerfreqs_vec <-  rtnorm(length(freqs),freqs,proposize,lower=0,upper=1)
 #  newinnerfreqs_mat <- matrix(newinnerfreqs_vec,nrow=numSNPs)
 #  return(newinnerfreqs_mat)
 #}
@@ -1011,7 +1012,7 @@ MakeGraphPlotInterior <- function(inputvals,selcoefs,root,title,minsel,maxsel){
   coords[,2] <- jitter(coords[,2],1)
   
   layout(matrix(c(1,2), nrow=2, ncol=1), widths=c(1), heights=c(6,1))
-  layout.show(2)
+  #layout.show(2)
   
   par(mar=c(1,1,1,1))
   plot(g,layout = coords,edge.color=E(g)$color,edge.width=E(g)$width,edge.arrow.mode=2,edge.arrow.size=E(g)$width/6,edge.arrow.width=E(g)$width/4,main=title,vertex.color="white",vertex.frame.color="white",vertex.label.color="black")
