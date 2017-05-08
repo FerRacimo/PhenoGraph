@@ -1,5 +1,8 @@
 # PhenoGraph
 
+![alt text](https://github.com/FerRacimo/PhenoGraph/blob/master/HEIGHT_1KG_YRI_CEU_CHB_PEL_CLM.pdf)
+
+
 # Required Libraries
 
 PhenoGraph requires the following R libraries. Make sure they are installed before you run it:
