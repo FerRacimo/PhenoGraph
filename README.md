@@ -83,5 +83,6 @@ PhenoGraph should produce two output files:
 
 # Plotting output
 
-[TO DO]
+To plot the output of an MCMC run in both a boxplot and a "pheno-graph", use the Plot_Trace.R script:
 
+Rscript Plot_Trace.R [trace_file.txt] [name_of_phenotype] [admixture_graph_file.R] [name_of_boxplot.pdf] [name_of_phenograph.pdf]
