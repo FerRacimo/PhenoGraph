@@ -2,6 +2,7 @@
 
 ![alt text](https://github.com/FerRacimo/PhenoGraph/blob/master/HEIGHT_1KG_YRI_CEU_CHB_PEL_CLM.png)
 
+<img src="https://github.com/FerRacimo/PhenoGraph/blob/master/HEIGHT_1KG_YRI_CEU_CHB_PEL_CLM.png" height="24">
 
 # Required Libraries
 
