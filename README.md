@@ -10,6 +10,7 @@ PhenoGraph requires the following R libraries. Make sure they are installed befo
 - pscl
 - parallel
 - ggplot2
+- gridExtra
 
 # Input files
 
