@@ -748,7 +748,7 @@ norm_vec <- function(x) sqrt(sum(x^2))
 
 
 
-ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs,total=FALSE){
+ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs,total=FALSE,randomize=FALSE){
   
   graphedges <- supergraph[[2]]
   deconsgraph <- DeconstructGraph(supergraph)
@@ -757,6 +757,9 @@ ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs,total=F
   checkseg <- which( apply(leaves_freqs,1,sum)/length(leaves) < 0.99  & apply(leaves_freqs,1,sum)/length(leaves) > 0.01 )
   leaves_freqs <- leaves_freqs[checkseg,]
   effects <- effects[checkseg]
+  
+  # Randomize effects if necessary
+  if(randomize == TRUE){effects <- effects * sample(c(-1,1),length(effects),replace=TRUE)}
   
   # Compute empirical covariance matrix
   checksegneut <- which( apply(neut_leaves_freqs,1,sum)/length(leaves) < 0.99  & apply(neut_leaves_freqs,1,sum)/length(leaves) > 0.01 )
