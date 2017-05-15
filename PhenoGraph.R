@@ -64,8 +64,14 @@ old_alphas <- start_alphas
 # Set-up initial probabilities
 log_prob_old_binom <- pbinom(input_leaf_der,input_leaf_tot,old_innerfreqs)
 log_prob_old_graph <- pgraph(deconsgraph,old_innerfreqs,effects,old_alphas)
-log_prob_old_innerfreqs <- log_innerfreqs_prior(old_innerfreqs,innerfreqs_prior_lower,innerfreqs_prior_upper)
+
+# Uniform frequency prior
+#log_prob_old_innerfreqs <- log_innerfreqs_prior(old_innerfreqs,innerfreqs_prior_lower,innerfreqs_prior_upper)
+log_prob_old_innerfreqs <- 0
+
+# Alpha prior
 log_prob_old_alphas <- log_alphas_prior_spikeslab(as.numeric(old_alphas[,3]),alpha_prior_mean,alpha_prior_stdev,ssfactor,old_propss)
+
 numaccepted_freqs <- 0
 totalmoves_freqs <- 0
 numaccepted_alphas <- 0
@@ -95,11 +101,14 @@ for( i in seq(1,numsteps)){
   colnames(new_innerfreqs) <- colnames(old_innerfreqs)
   freqtranslogdiff <- translogdiff_innerfreqs(old_innerfreqs,new_innerfreqs,innerfreqs_proposize,numSNPs)
 
-  # Evaluate frequency move
+  # Evaluate likelihood of new frequencies
   log_prob_new_binom <- pbinom(input_leaf_der,input_leaf_tot,new_innerfreqs)
   log_prob_new_graph <- pgraph(deconsgraph,new_innerfreqs,effects,old_alphas)
-  log_prob_new_innerfreqs <- log_innerfreqs_prior(new_innerfreqs,innerfreqs_prior_lower,innerfreqs_prior_upper)
-    
+  
+  # Uniform frequency prior
+  #log_prob_new_innerfreqs <- log_innerfreqs_prior(new_innerfreqs,innerfreqs_prior_lower,innerfreqs_prior_upper)
+  log_prob_new_innerfreqs <- 0
+  
   log_prob_trans_freq <- apply(freqtranslogdiff, 1, function(y){
     return(sum(y))
   })
