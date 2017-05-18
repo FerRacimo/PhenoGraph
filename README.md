@@ -81,7 +81,7 @@ PhenoGraph should produce two output files:
     - The q_B statistic for each branch(signed, Normal(0,1) distributed under neutrality)
     - The P-value for the Q_B statistic for each branch computed using the chi-squared distribution.
     - The P-value for the Q_B statistics for each branch computed using 1,000 pseudo-replicates of the trait-significant SNPs, by randomizing the sign of the estimated effect sizes.
-    - The Q_X statistic (Berg et al. 2014) and its P-valurd (under row "Total"), which serves to test for significant evidence for selection in the entire set of populations
+    - The Q_X statistic (Berg et al. 2014) and its P-value (under row "Total"), which serves to test for significant evidence for selection in the entire set of populations
 - The trace from the MCMC run (slower to compute; may take hours or days, depending on the complexity of the graph and the number of trait-affecting SNPs)
 
 # Plotting output
