@@ -114,17 +114,20 @@ for( i in seq(1,numsteps)){
   })
   log_prob_new <- log_prob_new_binom + log_prob_new_graph + log_prob_new_innerfreqs
   log_prob_old <- log_prob_old_binom + log_prob_old_graph + log_prob_old_innerfreqs
+  
   logpostdiff <-  log_prob_new - log_prob_old + log_prob_trans_freq
   logunifsample <- log(runif(numSNPs,0,1))
+
   replacevec <- (logpostdiff > logunifsample)
-  
+
   # Update frequencies
   old_innerfreqs[which(replacevec),] <- new_innerfreqs[which(replacevec),]
   log_prob_old_binom[which(replacevec)] <- log_prob_new_binom[which(replacevec)]
   log_prob_old_graph[which(replacevec)] <- log_prob_new_graph[which(replacevec)]
-  log_prob_old_innerfreqs[which(replacevec)] <- log_prob_new_innerfreqs[which(replacevec)]
+  log_prob_old_innerfreqs <- log_prob_new_innerfreqs
   numaccepted_freqs <- numaccepted_freqs + sum(replacevec)
   totalmoves_freqs <- totalmoves_freqs + numSNPs
+
   acceptance_rate_freqs <- numaccepted_freqs / totalmoves_freqs
   
   
