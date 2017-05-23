@@ -1050,7 +1050,7 @@ MakeGraphPlot <- function(tablename,edgevalues,root,phenotype,minsel,maxsel){
 }
 
 
-MakeGraphPlotQfile <- function(qfile,edgevalues,root,phenotype,minsel,maxsel){
+MakeGraphPlotQfile <- function(tablename,edgevalues,root,phenotype,minsel,maxsel){
   
   table <- read.table(tablename,header=TRUE)
   table <- table[which(table$branc != "Total"),]
