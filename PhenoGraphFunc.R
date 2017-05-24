@@ -858,7 +858,7 @@ ChiSquared <- function(supergraph,leaves_freqs,effects,neut_leaves_freqs,total=F
     denominator <- varmean
     Qteststat <- numerator / denominator
     
-    Pval <- 1 - pchisq(Qteststat,qr(Fmat)$rank-1)
+    Pval <- 1 - pchisq(Qteststat,qr(Fmat)$rank)
     allstats <- c(Qteststat,NaN,Pval)
   }
 
