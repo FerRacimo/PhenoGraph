@@ -1,6 +1,3 @@
-#setwd("~/PhenoGraph")
-setwd("~/Dropbox/Research/PhenoGraph")
-
 source("PhenoGraphFunc.R")
 source("PhenoGraph.R")
 
